@@ -5,6 +5,7 @@ module Ordn.Daily
 
 import Data.Maybe (fromMaybe)
 import Data.List (findIndex)
+import qualified System.Directory as Dir
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as Char8
 
@@ -55,7 +56,10 @@ createDailyFile config = do
           todosForToday
           (periodicLog config)
 
-      Char8.writeFile (periodicLogPath config) (Aeson.encode updatedLog)
+      Char8.writeFile ((periodicLogPath config)++".tmp") (Aeson.encode updatedLog)
+      Dir.removeFile $ periodicLogPath config
+      Dir.copyFile ((periodicLogPath config)++".tmp") (periodicLogPath config)
+      Dir.removeFile ((periodicLogPath config)++".tmp")
 
 
 addTodos :: [ChecklistItem] -> Document -> Document
