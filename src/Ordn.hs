@@ -1,9 +1,16 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Ordn where
 
 import Data.List (intercalate, isPrefixOf)
 import Data.Maybe (fromMaybe)
-import Data.Time.Clock (getCurrentTime, utctDay)
+import qualified Data.Time as Time
 import Data.Time.Calendar (toGregorian)
+import qualified Data.ByteString.Lazy.Char8 as Char8
+import qualified Data.Aeson as Aeson
+import qualified System.Directory as Dir
+
+import GHC.Generics
+import qualified Data.Aeson as Aeson
 
 -- Config
 
@@ -14,14 +21,9 @@ data Config = Config
   , dailyTemplateName :: FilePath
   , defaultTemplateName :: FilePath
   , periodicTemplateName :: FilePath
+  , periodicLog :: [PeriodicLogEntry ChecklistItem]
+  , periodicLogPath :: FilePath
   , today :: Date
-  } deriving Show
-
-
-data Date = Date
-  { year :: Integer
-  , month :: Int
-  , day :: Int
   } deriving Show
 
 
@@ -33,15 +35,29 @@ defaultConfig = Config
   , dailyTemplateName = "daily.md"
   , defaultTemplateName = "default.md"
   , periodicTemplateName = "periodic.md"
+  , periodicLogPath = "./.state"
   , today = Date 0 0 0
+  , periodicLog = []
   }
 
 
 loadConfig :: IO Config
 loadConfig = do
-  date <- getCurrentTime
-  let (y, m, d) = toGregorian $ utctDay date
-  pure $ defaultConfig { today = Date y m d}
+  let pLogPath = periodicLogPath defaultConfig
+  pLogFileExists <- Dir.doesFileExist pLogPath
+
+  if not pLogFileExists
+    then writeFile pLogPath "[]"
+    else pure ()
+
+  periodicLogFileContent <- Char8.readFile (periodicLogPath defaultConfig)
+  date <- Time.getZonedTime
+
+  let
+    (y, m, d) = toGregorian $ Time.localDay $ Time.zonedTimeToLocalTime date
+    pLog = fromMaybe [] $ Aeson.decode periodicLogFileContent
+
+  pure $ defaultConfig { today = Date y m d, periodicLog = pLog}
 
 
 templatePath :: Config -> String -> FilePath
@@ -50,6 +66,85 @@ templatePath config name = (templatesDir config) ++ name
 
 dailyTemplatePath :: Config -> FilePath
 dailyTemplatePath config = templatePath config $ dailyTemplateName config
+
+
+-- Date
+
+data Date = Date
+  { year :: Integer
+  , month :: Int
+  , day :: Int
+  } deriving (Eq, Generic, Ord, Show)
+
+instance Aeson.ToJSON Date where
+  -- Generic
+
+instance Aeson.FromJSON Date where
+  -- Generic
+
+
+data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+  deriving (Eq, Show)
+
+dayOfWeek :: Date -> Day
+dayOfWeek (Date y m d) =
+  case Time.dayOfWeek $ Time.fromGregorian y m d of
+    Time.Monday -> Monday
+    Time.Tuesday -> Tuesday
+    Time.Wednesday -> Wednesday
+    Time.Thursday -> Thursday
+    Time.Friday -> Friday
+    Time.Saturday -> Saturday
+    Time.Sunday -> Sunday
+
+addDays :: Int -> Date -> Date
+addDays n (Date y m d) =
+  let
+    (newYear, newMonth, newDay) = Time.toGregorian $ Time.addDays (toInteger n) $ Time.fromGregorian y m d
+  in
+    Date newYear newMonth newDay
+
+
+-- Periodic log
+
+data Period
+  = Daily
+  | EveryNDays Int (Maybe Date)
+  | Weekly Day
+  | Monthly Int
+  deriving (Eq, Show)
+
+isEveryNDays :: Period -> Bool
+isEveryNDays (EveryNDays _ _) = True
+isEveryNDays _ = False
+
+data PeriodicItem a =
+  PeriodicItem
+    { period :: Period
+    , piItem :: a
+    } deriving (Eq, Show)
+
+data PeriodicLogEntry a =
+  PeriodicLogEntry
+    { plItem :: a
+    , lastUsed :: Date
+    } deriving (Eq, Generic, Show)
+
+instance Aeson.ToJSON a => Aeson.ToJSON (PeriodicLogEntry a) where
+  -- Generic
+
+instance Aeson.FromJSON a => Aeson.FromJSON (PeriodicLogEntry a) where
+  -- Generic
+
+
+newtype PeriodicLog = PeriodicLog [PeriodicLogEntry ChecklistItem]
+  deriving (Generic, Show)
+
+instance Aeson.FromJSON PeriodicLog where
+  -- Generic
+
+instance Aeson.ToJSON PeriodicLog where
+  -- Generic
 
 -- Document
 
@@ -69,9 +164,21 @@ type StringValue = [StringValueAtom]
 data StringValueAtom
   = StringLiteral String
   | Variable String
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)
 
-data ChecklistItem = ChecklistItem StringValue Bool deriving (Eq, Show)
+instance Aeson.ToJSON StringValueAtom where
+  -- Generic
+
+instance Aeson.FromJSON StringValueAtom where
+  -- Generic
+
+data ChecklistItem = ChecklistItem StringValue Bool deriving (Eq, Generic, Show)
+
+instance Aeson.ToJSON ChecklistItem where
+  -- Generic
+
+instance Aeson.FromJSON ChecklistItem where
+  -- Generic
 
 type LookupTable = [(String, String)]
 

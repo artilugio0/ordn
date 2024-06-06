@@ -5,6 +5,8 @@ module Ordn.Daily
 
 import Data.Maybe (fromMaybe)
 import Data.List (findIndex)
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy.Char8 as Char8
 
 import Ordn
 import qualified Ordn.Markdown as Markdown
@@ -25,7 +27,7 @@ defaultDailyFile =
 
 createDailyFile :: Config -> IO ()
 createDailyFile config = do
-  let 
+  let
       fileName = "daily-" ++ (showDate $ today config) ++ ".md"
       filePath = (dailyDir config) ++ fileName
       table = templateLookupTableFromConfig config
@@ -36,7 +38,7 @@ createDailyFile config = do
     then pure ()
     else do
       dailyTemplateContent <- readFile $ dailyTemplatePath config
-      periodicTemplate <- DocumentIO.getPeriodicTemplate defaultConfig
+      periodicTemplate <- DocumentIO.getPeriodicTemplate config
 
       let todosForToday = Periodic.getTodosForToday config periodicTemplate
           dailyDoc' = fromMaybe defaultDailyFile . Markdown.parse $ dailyTemplateContent
@@ -45,6 +47,15 @@ createDailyFile config = do
       let fileContent = renderDocument table dailyDoc
 
       writeFile filePath fileContent
+
+      -- update log
+      let
+        updatedLog = Periodic.updatePeriodicLog
+          (today config)
+          todosForToday
+          (periodicLog config)
+
+      Char8.writeFile (periodicLogPath config) (Aeson.encode updatedLog)
 
 
 addTodos :: [ChecklistItem] -> Document -> Document
