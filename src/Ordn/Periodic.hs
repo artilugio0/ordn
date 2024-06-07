@@ -115,8 +115,6 @@ isPeriodicItemForDate _ [] _ = True
 isPeriodicItemForDate date (logEntry:rest) item =
   case period item of
     EveryNDays nDays Nothing ->
-      -- this could be implemented as a special case of the next match case
-      -- by setting startdate to today
       case logEntry of
         PeriodicLogEntry it lastdate | it == piItem item ->
           addDays nDays lastdate == date -- Think about changing it to a less than comparison
