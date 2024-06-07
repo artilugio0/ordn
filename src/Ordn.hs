@@ -104,6 +104,12 @@ addDays n (Date y m d) =
   in
     Date newYear newMonth newDay
 
+diffDays :: Date -> Date -> Integer
+diffDays (Date y1 m1 d1) (Date y2 m2 d2) =
+  Time.diffDays
+    (Time.fromGregorian y1 m1 d1)
+    (Time.fromGregorian y2 m2 d2)
+
 
 -- Periodic log
 

@@ -114,10 +114,23 @@ isPeriodicItemForDate :: Eq a => Date -> [PeriodicLogEntry a] -> PeriodicItem a 
 isPeriodicItemForDate _ [] _ = True
 isPeriodicItemForDate date (logEntry:rest) item =
   case period item of
-    EveryNDays nDays _ ->
+    EveryNDays nDays Nothing ->
+      -- this could be implemented as a special case of the next match case
+      -- by setting startdate to today
       case logEntry of
         PeriodicLogEntry it lastdate | it == piItem item ->
           addDays nDays lastdate == date -- Think about changing it to a less than comparison
+
+        _ -> isPeriodicItemForDate date rest item
+
+    EveryNDays nDays (Just startDate) ->
+      case logEntry of
+        PeriodicLogEntry it _ | it == piItem item ->
+          let
+            alreadyStarted = date >= startDate
+            isMultipleOfNDays = (mod (diffDays startDate date) (toInteger nDays)) == 0
+          in
+            alreadyStarted && isMultipleOfNDays
 
         _ -> isPeriodicItemForDate date rest item
 
