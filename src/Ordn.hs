@@ -115,6 +115,7 @@ diffDays (Date y1 m1 d1) (Date y2 m2 d2) =
 
 data Period
   = Daily
+  | DailyExceptDays [Day]
   | EveryNDays Int (Maybe Date)
   | Weekly Day
   | Monthly Int
@@ -226,7 +227,7 @@ replace old new str =
 
 
 templateLookupTableFromConfig :: Config -> [(String, String)]
-templateLookupTableFromConfig conf = 
+templateLookupTableFromConfig conf =
   [ ("date", showDate $ today conf)
   ]
 

@@ -34,7 +34,7 @@ instance Applicative Parser where
     case f s of
       (Just a, rest) ->
         case runParser (a <$> p) rest of
-          (Nothing, _) -> (Nothing, s) 
+          (Nothing, _) -> (Nothing, s)
           x -> x
       (Nothing, _) -> (Nothing,s ))
 
@@ -176,7 +176,7 @@ ignoreEmptyLines p =
 
 elementsListParser :: Parser [Element]
 elementsListParser =
-  (:) 
+  (:)
   <$> (alternativeParser
         (ignoreEmptyLines headingParser)
         (alternativeParser

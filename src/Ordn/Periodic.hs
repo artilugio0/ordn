@@ -2,8 +2,9 @@ module Ordn.Periodic where
 
 import Text.Read (readMaybe)
 import Control.Monad (join)
-import Data.Char (toLower)
+import Data.Char (toLower, isSpace)
 import Data.List (find)
+import Data.Maybe (fromMaybe)
 
 import Ordn
 
@@ -15,12 +16,22 @@ getTodosForToday conf doc =
     monthDay = day $ date
     periodicTodos = documentToPeriodicTodos doc
     daily = join $ map piItem $ filter (\pit -> period pit == Daily) periodicTodos
+
+    dailyExceptDays =
+      join $ map piItem
+      $ filter
+        (\pit ->
+          case period pit of
+            DailyExceptDays days -> not $ elem dayW days
+            _ -> False)
+      $ periodicTodos
+
     monthly = join $ map piItem $ filter (\pit -> period pit == Monthly monthDay) periodicTodos
     weekly = join $ map piItem $ filter (\pit -> period pit == Weekly dayW) periodicTodos
     everyNdays' = filter (isEveryNDays . period) periodicTodos
     everyNdays = filterEveryNDaysForDate date (periodicLog conf) everyNdays'
   in
-    daily ++ weekly ++ monthly ++ everyNdays 
+    daily ++ dailyExceptDays ++ weekly ++ monthly ++ everyNdays
 
 
 documentToPeriodicTodos :: Document -> [PeriodicItem [ChecklistItem]]
@@ -31,19 +42,26 @@ documentToPeriodicTodos (Document ((Heading _ desc):(Checklist items):rest)) =
     [StringLiteral "Daily"] ->
       PeriodicItem { piItem = items, period = Daily } : documentToPeriodicTodos (Document rest)
 
+    [StringLiteral ('D':'a':'i':'l':'y':' ':'e':'x':'c':'e':'p':'t':' ':'o':'n':' ':dayStr)] ->
+      let
+        parsedDays =
+          sequenceA
+          $ map (dayFromStr . filter (not . isSpace))
+          $ splitOn (==',')
+          $ dayStr
+      in
+        case parsedDays of
+          Just exceptDays ->
+            PeriodicItem { piItem = items, period = DailyExceptDays exceptDays } : documentToPeriodicTodos (Document rest)
+          Nothing ->
+            documentToPeriodicTodos (Document rest)
+
     [StringLiteral "Weekly"] ->
       PeriodicItem { piItem = items, period = Weekly Monday } : documentToPeriodicTodos (Document rest)
 
     [StringLiteral ('W':'e':'e':'k':'l':'y':' ':dayStr)] ->
       let
-        weekDay = case map toLower dayStr of
-          "tuesday" -> Tuesday
-          "wednesday" -> Wednesday
-          "thursday" -> Thursday
-          "friday" -> Friday
-          "saturday" -> Saturday
-          "sunday" -> Sunday
-          _ -> Monday
+        weekDay = fromMaybe Monday $ dayFromStr dayStr
       in
         PeriodicItem { piItem = items, period = Weekly weekDay } : documentToPeriodicTodos (Document rest)
 
@@ -162,3 +180,14 @@ updatePeriodicLog dateToday items logs =
 
   in
     newEntries ++ updatedExistingEntries
+
+dayFromStr :: String -> Maybe Day
+dayFromStr str = case map toLower str of
+  "monday" -> Just Monday
+  "tuesday" -> Just Tuesday
+  "wednesday" -> Just Wednesday
+  "thursday" -> Just Thursday
+  "friday" -> Just Friday
+  "saturday" -> Just Saturday
+  "sunday" -> Just Sunday
+  _ -> Nothing

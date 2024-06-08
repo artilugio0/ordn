@@ -34,7 +34,7 @@ parseArgs ["create-daily"] = Just CreateDailyFile
 parseArgs ["create-document", name] =
   Just $ CreateDocumentFromDefaultTemplate name
 parseArgs ["create-document", name, template] =
-  Just $ CreateDocumentFromTemplate name template 
+  Just $ CreateDocumentFromTemplate name template
 parseArgs _ = Nothing
 
 
@@ -67,5 +67,5 @@ createDocumentFromTemplate fileName templateName  = do
 
 showUsage :: IO ()
 showUsage = do
-  programName <- Env.getProgName 
+  programName <- Env.getProgName
   putStrLn $ "Usage: " ++ programName ++ " [create-daily | create-document] [ARGS]"

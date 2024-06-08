@@ -44,3 +44,8 @@
 - [ ] every 3 days starting on item 1
 - [ ] every 3 days starting on item 2
 - [ ] every 3 days starting on item 3
+
+## Daily except on Monday, Tuesday
+- [ ] daily item except saturday, sunday 1
+- [ ] daily item except saturday, sunday 2
+- [ ] daily item except saturday, sunday 3
