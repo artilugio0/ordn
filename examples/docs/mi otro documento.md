@@ -1,6 +1,6 @@
 # Other template
 
-pingatre
+mi otro documento
 
 ## With this subtitle
 

@@ -44,8 +44,3 @@
 - [ ] every 3 days starting on item 1
 - [ ] every 3 days starting on item 2
 - [ ] every 3 days starting on item 3
-
-## Every 6 days starting on pingui
-- [ ] every 6 days starting on pingui item 1
-- [ ] every 6 days starting on pingui item 2
-- [ ] every 6 days starting on pingui item 3
