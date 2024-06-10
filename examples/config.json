@@ -1,0 +1,17 @@
+{
+  "dailyDir":"./altdaily/",
+  "dailyTemplateName":"daily.md",
+  "defaultTemplateName":"default.md",
+  "documentsDir":"./docs/",
+  "periodicLog":[],
+  "periodicLogPath":"./.state",
+  "periodicTemplateName":"periodic.md",
+  "templatesDir":"./templates/",
+  "today":{
+    "day":0,
+    "month":0,
+    "year":0
+  }
+}
+
+

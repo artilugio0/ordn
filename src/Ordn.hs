@@ -24,7 +24,13 @@ data Config = Config
   , periodicLog :: [PeriodicLogEntry ChecklistItem]
   , periodicLogPath :: FilePath
   , today :: Date
-  } deriving Show
+  } deriving (Generic, Show)
+
+instance Aeson.ToJSON Config where
+  -- Generic
+
+instance Aeson.FromJSON Config where
+  -- Generic
 
 
 defaultConfig :: Config
@@ -40,24 +46,35 @@ defaultConfig = Config
   , periodicLog = []
   }
 
+configFilePath :: FilePath
+configFilePath = "./config.json"
 
 loadConfig :: IO Config
 loadConfig = do
-  let pLogPath = periodicLogPath defaultConfig
+  Char8.putStrLn (Aeson.encode defaultConfig)
+  configFileExists <- Dir.doesFileExist configFilePath
+  config <- do
+    if configFileExists
+    then do
+      content <- Char8.readFile configFilePath
+      pure $ fromMaybe defaultConfig $ Aeson.decode content
+    else pure defaultConfig
+
+  let pLogPath = periodicLogPath config
   pLogFileExists <- Dir.doesFileExist pLogPath
 
   if not pLogFileExists
     then writeFile pLogPath "[]"
     else pure ()
 
-  periodicLogFileContent <- Char8.readFile (periodicLogPath defaultConfig)
+  periodicLogFileContent <- Char8.readFile (periodicLogPath config)
   date <- Time.getZonedTime
 
   let
     (y, m, d) = toGregorian $ Time.localDay $ Time.zonedTimeToLocalTime date
     pLog = fromMaybe [] $ Aeson.decode periodicLogFileContent
 
-  pure $ defaultConfig { today = Date y m d, periodicLog = pLog}
+  pure $ config { today = Date y m d, periodicLog = pLog}
 
 
 templatePath :: Config -> String -> FilePath
