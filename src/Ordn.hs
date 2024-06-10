@@ -51,7 +51,6 @@ configFilePath = "./config.json"
 
 loadConfig :: IO Config
 loadConfig = do
-  Char8.putStrLn (Aeson.encode defaultConfig)
   configFileExists <- Dir.doesFileExist configFilePath
   config <- do
     if configFileExists
