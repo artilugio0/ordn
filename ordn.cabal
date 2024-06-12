@@ -18,10 +18,15 @@ library
     import:           warnings
     exposed-modules:
         Ordn
-            Ordn.Markdown
+            Ordn.Config
             Ordn.Daily
+            Ordn.Date
+            Ordn.Document
             Ordn.DocumentIO
+            Ordn.Markdown
             Ordn.Periodic
+            Ordn.PeriodicLog
+
     -- other-modules:
     -- other-extensions:
     build-depends:

@@ -1,8 +1,7 @@
 module Ordn.Markdown
   where
 
-import Ordn
-import qualified Control.Applicative as A
+import Ordn.Document
 
 parse :: String -> Maybe Document
 parse = fst . runParser documentParser

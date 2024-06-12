@@ -6,7 +6,10 @@ import Data.Char (toLower, isSpace)
 import Data.List (find)
 import Data.Maybe (fromMaybe)
 
-import Ordn
+import Ordn.Date
+import Ordn.Config
+import Ordn.Document
+import Ordn.PeriodicLog
 
 getTodosForToday :: Config -> Document -> [ChecklistItem]
 getTodosForToday conf doc =

@@ -3,8 +3,6 @@ module Main where
 import qualified System.Environment as Env
 
 import qualified Ordn
-import qualified Ordn.Daily
-import qualified Ordn.DocumentIO
 
 main :: IO ()
 main = do
@@ -45,13 +43,13 @@ defaultCommand = CreateDailyFile
 createDailyFile :: IO ()
 createDailyFile = do
   config <- Ordn.loadConfig
-  Ordn.Daily.createDailyFile config
+  Ordn.createDailyFile config
 
 
 createDocumentFromDefaultTemplate :: String -> IO ()
 createDocumentFromDefaultTemplate fileName = do
   config <- Ordn.loadConfig
-  Ordn.DocumentIO.createDocumentFromDefaultTemplate
+  Ordn.createDocumentFromDefaultTemplate
     config
     fileName
 
@@ -59,7 +57,7 @@ createDocumentFromDefaultTemplate fileName = do
 createDocumentFromTemplate :: String -> String -> IO ()
 createDocumentFromTemplate fileName templateName  = do
   config <- Ordn.loadConfig
-  Ordn.DocumentIO.createDocumentFromTemplate
+  Ordn.createDocumentFromTemplate
     config
     templateName
     fileName

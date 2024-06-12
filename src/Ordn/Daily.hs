@@ -9,7 +9,8 @@ import qualified System.Directory as Dir
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as Char8
 
-import Ordn
+import Ordn.Document
+import Ordn.Config
 import qualified Ordn.Markdown as Markdown
 import qualified Ordn.DocumentIO as DocumentIO
 import qualified Ordn.Periodic as Periodic
@@ -31,7 +32,7 @@ createDailyFile config = do
   let
       fileName = "daily-" ++ (showDate $ today config) ++ ".md"
       filePath = (dailyDir config) ++ fileName
-      table = templateLookupTableFromConfig config
+      table = templateLookupTableFromConfig $ today config
 
   shouldWrite <- DocumentIO.confirmOverwriteIfExists filePath
 

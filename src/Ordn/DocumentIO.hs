@@ -1,13 +1,15 @@
 module Ordn.DocumentIO where
 
-import Ordn
 import qualified Ordn.Markdown as Markdown
 import qualified System.Directory as Dir
+
+import Ordn.Config
+import Ordn.Document
 
 createDocumentFromTemplate :: Config -> String -> String -> IO()
 createDocumentFromTemplate config template fileName = do
   let filePath = (documentsDir config) ++ fileName ++ ".md"
-      table' = templateLookupTableFromConfig config
+      table' = templateLookupTableFromConfig $ today config
 
   shouldWrite <- confirmOverwriteIfExists filePath
 
