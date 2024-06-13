@@ -4,12 +4,10 @@ module Ordn.Config where
 import qualified System.Directory as Dir
 import qualified Data.ByteString.Lazy.Char8 as Char8
 import qualified Data.Aeson as Aeson
-import qualified Data.Time as Time
-import Data.Time.Calendar (toGregorian)
 import GHC.Generics
 import Data.Maybe (fromMaybe)
 
-import Ordn.Date
+import qualified Ordn.Date as Date
 import Ordn.PeriodicLog
 import Ordn.Document
 
@@ -32,7 +30,8 @@ instance Aeson.FromJSON Config where
 data Environment = Environment
   { config :: Config
   , periodicLog :: [PeriodicLogEntry ChecklistItem]
-  , today :: Date
+  , today :: Date.Date
+  , timestamp :: Integer
   } deriving Show
 
 
@@ -66,7 +65,8 @@ defaultEnvironment :: Environment
 defaultEnvironment = Environment
   { config = defaultConfig
   , periodicLog = []
-  , today = Date 0 0 0
+  , today = Date.Date 0 0 0
+  , timestamp = 0
   }
 
 loadEnvironment :: IO Environment
@@ -81,13 +81,13 @@ loadEnvironment = do
     else pure ()
 
   periodicLogFileContent <- Char8.readFile pLogPath
-  date <- Time.getZonedTime
+  date <- Date.getDate
+  timestamp' <- Date.getTimestamp
 
   let
-    (y, m, d) = toGregorian $ Time.localDay $ Time.zonedTimeToLocalTime date
     pLog = fromMaybe [] $ Aeson.decode periodicLogFileContent
 
-  pure $ Environment { config = cfg ,today = Date y m d, periodicLog = pLog}
+  pure $ Environment { config = cfg ,today = date, timestamp = timestamp', periodicLog = pLog}
 
 defaultDailyDir :: String
 defaultDailyDir = "./daily/"

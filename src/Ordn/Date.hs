@@ -2,6 +2,7 @@
 module Ordn.Date where
 
 import qualified Data.Time as Time
+import qualified Data.Time.Clock.POSIX as PosixTime
 import qualified Data.Aeson as Aeson
 import GHC.Generics
 
@@ -38,8 +39,20 @@ addDays n (Date y m d) =
   in
     Date newYear newMonth newDay
 
+
 diffDays :: Date -> Date -> Integer
 diffDays (Date y1 m1 d1) (Date y2 m2 d2) =
   Time.diffDays
     (Time.fromGregorian y1 m1 d1)
     (Time.fromGregorian y2 m2 d2)
+
+
+getTimestamp :: IO Integer
+getTimestamp = round <$> PosixTime.getPOSIXTime
+
+
+getDate :: IO Date
+getDate = do
+  date <- Time.getZonedTime
+  let (y, m, d) = Time.toGregorian $ Time.localDay $ Time.zonedTimeToLocalTime date
+  pure $ Date y m d

@@ -8,7 +8,7 @@ import Ordn.Document
 
 createDocumentFromTemplate :: Environment -> String -> String -> IO()
 createDocumentFromTemplate env template fileName = do
-  let filePath = (getDocumentsDir env) ++ fileName ++ ".md"
+  let filePath = (getDocumentsDir env) ++ (show $ timestamp env) ++ "-" ++ fileName ++ ".md"
       table' = templateLookupTableFromEnvironment $ today env 
 
   shouldWrite <- confirmOverwriteIfExists filePath
