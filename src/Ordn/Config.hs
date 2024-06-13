@@ -6,6 +6,7 @@ import qualified Data.ByteString.Lazy.Char8 as Char8
 import qualified Data.Aeson as Aeson
 import GHC.Generics
 import Data.Maybe (fromMaybe)
+import Control.Monad.Reader (Reader, ask)
 
 import qualified Ordn.Date as Date
 import Ordn.PeriodicLog
@@ -110,41 +111,61 @@ defaultPeriodicTemplateName = "periodic.md"
 defaultPeriodicLogPath :: String
 defaultPeriodicLogPath = "./.state"
 
-templatePath :: Environment -> String -> FilePath
-templatePath env name = getTemplatesDir env ++ name
+templatePath :: String -> Reader Environment FilePath
+templatePath name = do
+  dir <- getTemplatesDir
+  pure $ dir ++ name
 
 
-dailyTemplatePath :: Environment -> FilePath
-dailyTemplatePath env = templatePath env $ getDailyTemplateName env
+dailyTemplatePath :: Reader Environment FilePath
+dailyTemplatePath = do
+  templateName <- getDailyTemplateName
+  templatePath templateName
 
 
-periodicTemplatePath :: Environment -> FilePath
-periodicTemplatePath env = templatePath env $ getPeriodicTemplateName env
+periodicTemplatePath :: Reader Environment FilePath
+periodicTemplatePath = do
+  templateName <- getPeriodicTemplateName
+  templatePath templateName
 
 
-getDailyDir :: Environment -> FilePath
-getDailyDir env = fromMaybe defaultDailyDir (dailyDir $ config env)
+getDailyDir :: Reader Environment FilePath
+getDailyDir = do
+  env <- ask
+  pure $ fromMaybe defaultDailyDir (dailyDir $ config env)
 
 
-getDocumentsDir :: Environment -> FilePath
-getDocumentsDir env = fromMaybe defaultDocumentsDir (documentsDir $ config env)
+getDocumentsDir :: Reader Environment FilePath
+getDocumentsDir = do
+  env <- ask
+  pure $ fromMaybe defaultDocumentsDir (documentsDir $ config env)
 
 
-getTemplatesDir :: Environment -> FilePath
-getTemplatesDir env = fromMaybe defaultTemplatesDir (templatesDir $ config env)
+getTemplatesDir :: Reader Environment FilePath
+getTemplatesDir = do
+  env <- ask
+  pure $ fromMaybe defaultTemplatesDir (templatesDir $ config env)
 
 
-getDailyTemplateName :: Environment -> FilePath
-getDailyTemplateName env = fromMaybe defaultDailyTemplateName (dailyTemplateName $ config env)
+getDailyTemplateName :: Reader Environment FilePath
+getDailyTemplateName = do
+  env <- ask
+  pure $ fromMaybe defaultDailyTemplateName (dailyTemplateName $ config env)
 
 
-getDefaultTemplateName :: Environment -> FilePath
-getDefaultTemplateName env = fromMaybe defaultDefaultTemplateName (defaultTemplateName $ config env)
+getDefaultTemplateName :: Reader Environment FilePath
+getDefaultTemplateName = do
+  env <- ask
+  pure $ fromMaybe defaultDefaultTemplateName (defaultTemplateName $ config env)
 
 
-getPeriodicTemplateName :: Environment -> FilePath
-getPeriodicTemplateName env = fromMaybe defaultPeriodicTemplateName (periodicTemplateName $ config env)
+getPeriodicTemplateName :: Reader Environment FilePath
+getPeriodicTemplateName = do
+  env <- ask
+  pure $ fromMaybe defaultPeriodicTemplateName (periodicTemplateName $ config env)
 
 
-getPeriodicLogPath :: Environment -> FilePath
-getPeriodicLogPath env = fromMaybe defaultPeriodicLogPath (periodicLogPath $ config env)
+getPeriodicLogPath :: Reader Environment FilePath
+getPeriodicLogPath = do
+  env <- ask
+  pure $ fromMaybe defaultPeriodicLogPath (periodicLogPath $ config env)

@@ -3,6 +3,7 @@ module Ordn.Daily
   )
   where
 
+import Control.Monad.Reader (Reader, ask)
 import Data.Maybe (fromMaybe)
 import Data.List (findIndex)
 import qualified System.Directory as Dir
@@ -27,41 +28,49 @@ defaultDailyFile =
   ]
 
 
-createDailyFile :: Environment -> IO ()
-createDailyFile env = do
+createDailyFile :: Reader Environment (IO ())
+createDailyFile = do
+  env <- ask
+  dailyDir <- getDailyDir
+  periodicLogPath <- getPeriodicLogPath
+  dailyTemplatePath' <- dailyTemplatePath
+  periodicTemplateIO <- DocumentIO.getPeriodicTemplate
+
   let
       todayDate = today env
       fileName = "daily-" ++ (showDate todayDate) ++ ".md"
-      filePath = (getDailyDir env) ++ fileName
-      table = templateLookupTableFromEnvironment $ todayDate
+      filePath = dailyDir ++ fileName
+      table = templateLookupTableFromEnvironment todayDate
 
-  shouldWrite <- DocumentIO.confirmOverwriteIfExists filePath
+  pure
+    $ do
+      shouldWrite <- DocumentIO.confirmOverwriteIfExists filePath
 
-  if not shouldWrite
-    then pure ()
-    else do
-      dailyTemplateContent <- readFile $ dailyTemplatePath env
-      periodicTemplate <- DocumentIO.getPeriodicTemplate env
+      if not shouldWrite
+        then pure ()
+        else do
+          dailyTemplateContent <- readFile dailyTemplatePath'
+          periodicTemplate <- periodicTemplateIO
 
-      let todosForToday = Periodic.getTodosForToday env periodicTemplate
-          dailyDoc' = fromMaybe defaultDailyFile . Markdown.parse $ dailyTemplateContent
-          dailyDoc = addTodos todosForToday dailyDoc'
+          let todosForToday = Periodic.getTodosForToday env periodicTemplate
+              dailyDoc' = fromMaybe defaultDailyFile . Markdown.parse $ dailyTemplateContent
+              dailyDoc = addTodos todosForToday dailyDoc'
 
-      let fileContent = renderDocument table dailyDoc
+          let fileContent = renderDocument table dailyDoc
 
-      writeFile filePath fileContent
+          writeFile filePath fileContent
 
-      -- update log
-      let
-        updatedLog = Periodic.updatePeriodicLog
-          (today env)
-          todosForToday
-          (periodicLog env)
+          -- update log
+          let
+            updatedLog = Periodic.updatePeriodicLog
+              todayDate
+              todosForToday
+              (periodicLog env)
 
-      Char8.writeFile ((getPeriodicLogPath env)++".tmp") (Aeson.encode updatedLog)
-      Dir.removeFile $ getPeriodicLogPath env
-      Dir.copyFile ((getPeriodicLogPath env)++".tmp") (getPeriodicLogPath env)
-      Dir.removeFile ((getPeriodicLogPath env)++".tmp")
+          Char8.writeFile (periodicLogPath ++ ".tmp") (Aeson.encode updatedLog)
+          Dir.removeFile $ periodicLogPath
+          Dir.copyFile (periodicLogPath ++ ".tmp") periodicLogPath
+          Dir.removeFile (periodicLogPath ++ ".tmp")
 
 
 addTodos :: [ChecklistItem] -> Document -> Document

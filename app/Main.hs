@@ -1,6 +1,7 @@
 module Main where
 
 import qualified System.Environment as Env
+import Control.Monad.Reader (runReader)
 
 import qualified Ordn
 import qualified Ordn.Config as Config
@@ -11,7 +12,8 @@ main = do
   let command = parseArgs args
 
   case command of
-    Just CreateDailyFile -> createDailyFile
+    Just CreateDailyFile ->
+      createDailyFile
 
     Just (CreateDocumentFromTemplate t n) ->
       createDocumentFromTemplate t n
@@ -44,24 +46,21 @@ defaultCommand = CreateDailyFile
 createDailyFile :: IO ()
 createDailyFile = do
   env <- Config.loadEnvironment
-  Ordn.createDailyFile env
+  runReader Ordn.createDailyFile env
 
 
 createDocumentFromDefaultTemplate :: String -> IO ()
 createDocumentFromDefaultTemplate fileName = do
   env <- Config.loadEnvironment
-  Ordn.createDocumentFromDefaultTemplate
+  runReader
+    (Ordn.createDocumentFromDefaultTemplate fileName)
     env
-    fileName
 
 
 createDocumentFromTemplate :: String -> String -> IO ()
 createDocumentFromTemplate fileName templateName  = do
   env <- Config.loadEnvironment
-  Ordn.createDocumentFromTemplate
-    env
-    templateName
-    fileName
+  runReader (Ordn.createDocumentFromTemplate templateName fileName) env
 
 
 showUsage :: IO ()

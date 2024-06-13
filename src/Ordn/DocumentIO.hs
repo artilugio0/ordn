@@ -3,34 +3,46 @@ module Ordn.DocumentIO where
 import qualified Ordn.Markdown as Markdown
 import qualified System.Directory as Dir
 
+import Control.Monad.Reader (Reader, ask)
+
 import Ordn.Config
 import Ordn.Document
 
-createDocumentFromTemplate :: Environment -> String -> String -> IO()
-createDocumentFromTemplate env template fileName = do
-  let filePath = (getDocumentsDir env) ++ (show $ timestamp env) ++ "-" ++ fileName ++ ".md"
-      table' = templateLookupTableFromEnvironment $ today env 
+createDocumentFromTemplate :: String -> String -> Reader Environment (IO ())
+createDocumentFromTemplate template fileName = do
+  env <- ask
+  docsDir <- getDocumentsDir
+  templatePath' <- templatePath template
 
-  shouldWrite <- confirmOverwriteIfExists filePath
+  let timestampStr = show $ timestamp env
+      todayDate = today env
 
-  if not shouldWrite
-    then pure ()
-    else do
-      content <- readFile $ templatePath env template
+  let filePath = docsDir ++ timestampStr ++ "-" ++ fileName ++ ".md"
+      table' = templateLookupTableFromEnvironment todayDate
 
-      let table = ("file_name", fileName) : table'
+  pure
+    $ do
+      shouldWrite <- confirmOverwriteIfExists filePath
 
-      case Markdown.parse content of
-        Just doc ->
-          writeFile filePath $ renderDocument table doc
+      if not shouldWrite
+        then pure ()
+        else do
+          content <- readFile templatePath'
 
-        Nothing ->
-          putStrLn "Error: could not parse document"
+          let table = ("file_name", fileName) : table'
+
+          case Markdown.parse content of
+            Just doc ->
+              writeFile filePath $ renderDocument table doc
+
+            Nothing ->
+              putStrLn "Error: could not parse document"
 
 
-createDocumentFromDefaultTemplate :: Environment -> String -> IO()
-createDocumentFromDefaultTemplate env =
-  createDocumentFromTemplate env $ getDefaultTemplateName env
+createDocumentFromDefaultTemplate :: String -> Reader Environment (IO ())
+createDocumentFromDefaultTemplate name = do
+  defaultTemplateName <- getDefaultTemplateName
+  createDocumentFromTemplate defaultTemplateName name
 
 
 confirmOverwriteIfExists :: FilePath -> IO Bool
@@ -44,13 +56,17 @@ confirmOverwriteIfExists file = do
     else pure True
 
 
-getPeriodicTemplate :: Environment -> IO(Document)
-getPeriodicTemplate env = do
-  let filePath = periodicTemplatePath env
+getPeriodicTemplate :: Reader Environment (IO Document)
+getPeriodicTemplate = do
+  filePath <- periodicTemplatePath
 
-  fileContent <- readFile filePath
-  let doc = Markdown.parse fileContent
+  let
+    doc = do
+      fileContent <- readFile filePath
+      let doc = Markdown.parse fileContent
 
-  case doc of
-    Nothing -> pure $ Document []
-    Just d -> pure d
+      case doc of
+        Nothing -> pure $ Document []
+        Just d -> pure d
+
+  pure doc
