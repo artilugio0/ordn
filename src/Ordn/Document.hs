@@ -79,8 +79,8 @@ replace old new str =
     else head str : replace old new (tail str)
 
 
-templateLookupTableFromConfig :: Date -> [(String, String)]
-templateLookupTableFromConfig today =
+templateLookupTableFromEnvironment :: Date -> [(String, String)]
+templateLookupTableFromEnvironment today =
   [ ("date", showDate today)
   ]
 

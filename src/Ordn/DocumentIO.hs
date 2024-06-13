@@ -6,17 +6,17 @@ import qualified System.Directory as Dir
 import Ordn.Config
 import Ordn.Document
 
-createDocumentFromTemplate :: Config -> String -> String -> IO()
-createDocumentFromTemplate config template fileName = do
-  let filePath = (documentsDir config) ++ fileName ++ ".md"
-      table' = templateLookupTableFromConfig $ today config
+createDocumentFromTemplate :: Environment -> String -> String -> IO()
+createDocumentFromTemplate env template fileName = do
+  let filePath = (getDocumentsDir env) ++ fileName ++ ".md"
+      table' = templateLookupTableFromEnvironment $ today env 
 
   shouldWrite <- confirmOverwriteIfExists filePath
 
   if not shouldWrite
     then pure ()
     else do
-      content <- readFile $ templatePath config template
+      content <- readFile $ templatePath env template
 
       let table = ("file_name", fileName) : table'
 
@@ -28,9 +28,9 @@ createDocumentFromTemplate config template fileName = do
           putStrLn "Error: could not parse document"
 
 
-createDocumentFromDefaultTemplate :: Config -> String -> IO()
-createDocumentFromDefaultTemplate config =
-  createDocumentFromTemplate config (defaultTemplateName config)
+createDocumentFromDefaultTemplate :: Environment -> String -> IO()
+createDocumentFromDefaultTemplate env =
+  createDocumentFromTemplate env $ getDefaultTemplateName env
 
 
 confirmOverwriteIfExists :: FilePath -> IO Bool
@@ -44,9 +44,9 @@ confirmOverwriteIfExists file = do
     else pure True
 
 
-getPeriodicTemplate :: Config -> IO(Document)
-getPeriodicTemplate config = do
-  let filePath = templatePath config $ periodicTemplateName config
+getPeriodicTemplate :: Environment -> IO(Document)
+getPeriodicTemplate env = do
+  let filePath = periodicTemplatePath env
 
   fileContent <- readFile filePath
   let doc = Markdown.parse fileContent

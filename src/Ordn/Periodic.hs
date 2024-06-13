@@ -11,10 +11,10 @@ import Ordn.Config
 import Ordn.Document
 import Ordn.PeriodicLog
 
-getTodosForToday :: Config -> Document -> [ChecklistItem]
-getTodosForToday conf doc =
+getTodosForToday :: Environment -> Document -> [ChecklistItem]
+getTodosForToday env doc =
   let
-    date = today conf
+    date = today env
     dayW = dayOfWeek $ date
     monthDay = day $ date
     periodicTodos = documentToPeriodicTodos doc
@@ -32,7 +32,7 @@ getTodosForToday conf doc =
     monthly = join $ map piItem $ filter (\pit -> period pit == Monthly monthDay) periodicTodos
     weekly = join $ map piItem $ filter (\pit -> period pit == Weekly dayW) periodicTodos
     everyNdays' = filter (isEveryNDays . period) periodicTodos
-    everyNdays = filterEveryNDaysForDate date (periodicLog conf) everyNdays'
+    everyNdays = filterEveryNDaysForDate date (periodicLog env) everyNdays'
   in
     daily ++ dailyExceptDays ++ weekly ++ monthly ++ everyNdays
 

@@ -1,6 +1,7 @@
 module Main where
 
 import Ordn
+import Ordn.Config
 import Ordn.Periodic
 
 main :: IO [()]
@@ -28,7 +29,7 @@ getTodosForTodayReturnsEmptyWithEmptyDoc =
   ( "getTodosForToday returns empty list with empty document"
   , let
       document = Document []
-      got = getTodosForToday defaultConfig document
+      got = getTodosForToday defaultEnvironment document
       expected = []
     in
       got == expected
@@ -49,7 +50,7 @@ getTodosForTodayReturnsDailyItems =
         , Checklist expected
         ]
 
-      got = getTodosForToday defaultConfig document
+      got = getTodosForToday defaultEnvironment document
 
     in
       got == expected
@@ -70,7 +71,7 @@ getTodosForTodayReturnsDailyExceptItems =
         , Checklist expected
         ]
 
-      config = defaultConfig { today = Date 2024 06 08 }
+      config = defaultEnvironment { today = Date 2024 06 08 }
       got = getTodosForToday config  document
 
     in
@@ -92,7 +93,7 @@ getTodosForTodayReturnsDailyExceptMultipleDaysItems =
         , Checklist expected
         ]
 
-      config = defaultConfig { today = Date 2024 06 08 }
+      config = defaultEnvironment { today = Date 2024 06 08 }
       got = getTodosForToday config  document
 
     in
@@ -112,7 +113,7 @@ getTodosForTodayDoesNotReturnDailyItemsForExceptedDays =
             ]
         ]
 
-      config = defaultConfig { today = Date 2024 06 08 } -- Saturday
+      config = defaultEnvironment { today = Date 2024 06 08 } -- Saturday
       got = getTodosForToday config  document
 
       expected = []
@@ -133,7 +134,7 @@ getTodosForTodayDoesNotReturnDailyItemsForInvalidExceptedDays =
             ]
         ]
 
-      config = defaultConfig { today = Date 2024 06 08 }
+      config = defaultEnvironment { today = Date 2024 06 08 }
       got = getTodosForToday config  document
 
       expected = []

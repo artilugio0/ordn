@@ -27,22 +27,23 @@ defaultDailyFile =
   ]
 
 
-createDailyFile :: Config -> IO ()
-createDailyFile config = do
+createDailyFile :: Environment -> IO ()
+createDailyFile env = do
   let
-      fileName = "daily-" ++ (showDate $ today config) ++ ".md"
-      filePath = (dailyDir config) ++ fileName
-      table = templateLookupTableFromConfig $ today config
+      todayDate = today env
+      fileName = "daily-" ++ (showDate todayDate) ++ ".md"
+      filePath = (getDailyDir env) ++ fileName
+      table = templateLookupTableFromEnvironment $ todayDate
 
   shouldWrite <- DocumentIO.confirmOverwriteIfExists filePath
 
   if not shouldWrite
     then pure ()
     else do
-      dailyTemplateContent <- readFile $ dailyTemplatePath config
-      periodicTemplate <- DocumentIO.getPeriodicTemplate config
+      dailyTemplateContent <- readFile $ dailyTemplatePath env
+      periodicTemplate <- DocumentIO.getPeriodicTemplate env
 
-      let todosForToday = Periodic.getTodosForToday config periodicTemplate
+      let todosForToday = Periodic.getTodosForToday env periodicTemplate
           dailyDoc' = fromMaybe defaultDailyFile . Markdown.parse $ dailyTemplateContent
           dailyDoc = addTodos todosForToday dailyDoc'
 
@@ -53,14 +54,14 @@ createDailyFile config = do
       -- update log
       let
         updatedLog = Periodic.updatePeriodicLog
-          (today config)
+          (today env)
           todosForToday
-          (periodicLog config)
+          (periodicLog env)
 
-      Char8.writeFile ((periodicLogPath config)++".tmp") (Aeson.encode updatedLog)
-      Dir.removeFile $ periodicLogPath config
-      Dir.copyFile ((periodicLogPath config)++".tmp") (periodicLogPath config)
-      Dir.removeFile ((periodicLogPath config)++".tmp")
+      Char8.writeFile ((getPeriodicLogPath env)++".tmp") (Aeson.encode updatedLog)
+      Dir.removeFile $ getPeriodicLogPath env
+      Dir.copyFile ((getPeriodicLogPath env)++".tmp") (getPeriodicLogPath env)
+      Dir.removeFile ((getPeriodicLogPath env)++".tmp")
 
 
 addTodos :: [ChecklistItem] -> Document -> Document
