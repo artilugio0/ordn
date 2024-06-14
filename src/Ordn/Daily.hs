@@ -11,7 +11,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as Char8
 
 import Ordn.Document
-import Ordn.Config
+import qualified Ordn.Config as Config
 import qualified Ordn.Markdown as Markdown
 import qualified Ordn.DocumentIO as DocumentIO
 import qualified Ordn.Periodic as Periodic
@@ -28,16 +28,16 @@ defaultDailyFile =
   ]
 
 
-createDailyFile :: Reader Environment (IO ())
+createDailyFile :: Reader Config.Environment (IO ())
 createDailyFile = do
   env <- ask
-  dailyDir <- getDailyDir
-  periodicLogPath <- getPeriodicLogPath
-  dailyTemplatePath' <- dailyTemplatePath
+  dailyDir <- Config.getDailyDir
+  periodicLogPath <- Config.getPeriodicLogPath
+  dailyTemplatePath' <- Config.dailyTemplatePath
   periodicTemplateIO <- DocumentIO.getPeriodicTemplate
 
   let
-      todayDate = today env
+      todayDate = Config.today env
       fileName = "daily-" ++ (showDate todayDate) ++ ".md"
       filePath = dailyDir ++ fileName
       table = templateLookupTableFromEnvironment todayDate
@@ -65,7 +65,7 @@ createDailyFile = do
             updatedLog = Periodic.updatePeriodicLog
               todayDate
               todosForToday
-              (periodicLog env)
+              (Config.periodicLog env)
 
           Char8.writeFile (periodicLogPath ++ ".tmp") (Aeson.encode updatedLog)
           Dir.removeFile $ periodicLogPath

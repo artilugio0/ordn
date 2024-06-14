@@ -41,8 +41,8 @@ createDocumentFromTemplate template fileName = do
 
 createDocumentFromDefaultTemplate :: String -> Reader Environment (IO ())
 createDocumentFromDefaultTemplate name = do
-  defaultTemplateName <- getDefaultTemplateName
-  createDocumentFromTemplate defaultTemplateName name
+  templateName <- getDefaultTemplateName
+  createDocumentFromTemplate templateName name
 
 
 confirmOverwriteIfExists :: FilePath -> IO Bool
@@ -63,9 +63,9 @@ getPeriodicTemplate = do
   let
     doc = do
       fileContent <- readFile filePath
-      let doc = Markdown.parse fileContent
+      let parsedDoc = Markdown.parse fileContent
 
-      case doc of
+      case parsedDoc of
         Nothing -> pure $ Document []
         Just d -> pure d
 

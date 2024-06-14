@@ -71,8 +71,8 @@ getTodosForTodayReturnsDailyExceptItems =
         , Checklist expected
         ]
 
-      config = defaultEnvironment { today = Date 2024 06 08 }
-      got = getTodosForToday config  document
+      cfg = defaultEnvironment { today = Date 2024 06 08 }
+      got = getTodosForToday cfg document
 
     in
       got == expected
@@ -93,8 +93,8 @@ getTodosForTodayReturnsDailyExceptMultipleDaysItems =
         , Checklist expected
         ]
 
-      config = defaultEnvironment { today = Date 2024 06 08 }
-      got = getTodosForToday config  document
+      cfg = defaultEnvironment { today = Date 2024 06 08 }
+      got = getTodosForToday cfg document
 
     in
       got == expected
@@ -113,8 +113,8 @@ getTodosForTodayDoesNotReturnDailyItemsForExceptedDays =
             ]
         ]
 
-      config = defaultEnvironment { today = Date 2024 06 08 } -- Saturday
-      got = getTodosForToday config  document
+      cfg = defaultEnvironment { today = Date 2024 06 08 } -- Saturday
+      got = getTodosForToday cfg document
 
       expected = []
     in
@@ -134,8 +134,8 @@ getTodosForTodayDoesNotReturnDailyItemsForInvalidExceptedDays =
             ]
         ]
 
-      config = defaultEnvironment { today = Date 2024 06 08 }
-      got = getTodosForToday config  document
+      cfg = defaultEnvironment { today = Date 2024 06 08 }
+      got = getTodosForToday cfg document
 
       expected = []
     in

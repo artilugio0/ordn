@@ -29,6 +29,8 @@ instance Functor Parser where
     in (fmap f result, rest))
 
 instance Applicative Parser where
+  pure a = Parser (\s -> (Just a, s))
+
   (Parser f) <*> p = Parser (\s ->
     case f s of
       (Just a, rest) ->
@@ -154,7 +156,7 @@ checklistParser = Parser (\s ->
         (Just _, rest2) ->
           case runParser checklistParser rest2 of
             (Just (Checklist items), rest3) -> (Just (Checklist (i:items)), rest3)
-            (Nothing, _) -> (Just (Checklist [i]), rest)
+            _ -> (Just (Checklist [i]), rest)
         (Nothing, _) -> (Just (Checklist [i]), rest)
     (Nothing, _) -> (Nothing, s))
 
