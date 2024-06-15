@@ -35,12 +35,12 @@ createDailyFile = do
   periodicLogPath <- Config.getPeriodicLogPath
   dailyTemplatePath' <- Config.dailyTemplatePath
   periodicTemplateIO <- DocumentIO.getPeriodicTemplate
+  table <- Config.getLookupTable
 
   let
       todayDate = Config.today env
       fileName = "daily-" ++ (showDate todayDate) ++ ".md"
       filePath = dailyDir ++ fileName
-      table = templateLookupTableFromEnvironment todayDate
 
   pure
     $ do

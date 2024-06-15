@@ -13,12 +13,11 @@ createDocumentFromTemplate template fileName = do
   env <- ask
   docsDir <- getDocumentsDir
   templatePath' <- templatePath template
+  table' <- getLookupTable
 
-  let timestampStr = show $ timestamp env
-      todayDate = today env
-
-  let filePath = docsDir ++ timestampStr ++ "-" ++ fileName ++ ".md"
-      table' = templateLookupTableFromEnvironment todayDate
+  let
+    timestampStr = show $ timestamp env
+    filePath = docsDir ++ timestampStr ++ "-" ++ fileName ++ ".md"
 
   pure
     $ do

@@ -169,3 +169,11 @@ getPeriodicLogPath :: Reader Environment FilePath
 getPeriodicLogPath = do
   env <- ask
   pure $ fromMaybe defaultPeriodicLogPath (periodicLogPath $ config env)
+
+
+getLookupTable :: Reader Environment [(String, String)]
+getLookupTable = do
+  dateStr <- showDate <$> today <$> ask
+  pure
+    [ ("date", dateStr)
+    ]

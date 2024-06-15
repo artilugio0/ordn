@@ -79,11 +79,6 @@ replace old new str =
     else head str : replace old new (tail str)
 
 
-templateLookupTableFromEnvironment :: Date -> [(String, String)]
-templateLookupTableFromEnvironment today =
-  [ ("date", showDate today)
-  ]
-
 showDate :: Date -> String
 showDate (Date y m d) =
   intercalate "-"
